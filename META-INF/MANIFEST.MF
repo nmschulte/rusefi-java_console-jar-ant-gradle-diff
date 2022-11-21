@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.10.12
+Created-By: 1.8.0_352-8u352-ga-1-b08 (Debian)
+Main-Class: com.rusefi.Launcher
+Built-Date: 2022-11-20 23:14:10
+Signature-Vendor: rusEFI LLC
+
