@@ -14,13 +14,20 @@ bool AcController::getAcState() {
 
 	engineTooSlow = rpm < 500;
 
-	if (engineTooSlow) {
-		return false;
-	}
-
 	auto maxRpm = engineConfiguration->maxAcRpm;
 	engineTooFast = maxRpm != 0 && maxRpmDeadband.gt(rpm, maxRpm);
 	if (engineTooFast) {
+	    invokeMethodRed();
+		return false;
+	}
+
+	if (engineTooSlow) {
+	    invokeMethod();
+		return false;
+	}
+
+	if (engineTooFast) {
+	    invokeMethodRed();
 		return false;
 	}
 
@@ -45,10 +52,8 @@ bool AcController::getAcState() {
 	if (tpsTooHigh) {
 			return false;
 	}
-	if (isDisabledByLua) {
-		return false;
-	}
 
+	acButtonState = engine->acSwitchState;
 	// All conditions allow AC, simply pass thru switch
 	return acButtonState;
 }
@@ -58,20 +63,12 @@ void AcController::onSlowCallback() {
 
 	m_acEnabled = isEnabled;
 
-	if (!isEnabled) {
-		// reset the timer if AC is off
-		m_timeSinceNoAc.reset();
-	}
+	enginePins.acRelay.setValue(isEnabled);
 
-	float acDelay = engineConfiguration->acDelay;
-	if (acDelay == 0) {
-		// Without delay configured, enable immediately
-		acCompressorState = isEnabled;
-	} else {
-		acCompressorState = isEnabled && m_timeSinceNoAc.hasElapsedSec(acDelay);
-	}
-
-	enginePins.acRelay.setValue(acCompressorState);
+#if EFI_TUNER_STUDIO
+	engine->outputChannels.acSwitchState = engine->acSwitchState;
+	engine->outputChannels.acState = isEnabled;
+#endif // EFI_TUNER_STUDIO
 }
 
 bool AcController::isAcEnabled() const {
